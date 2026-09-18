@@ -251,7 +251,7 @@ aesthetic:
       # If false all trails are disabled.
       enabled: true
       # The default particle type.
-      type: 'VILLAGER_HAPPY'
+      type: 'HAPPY_VILLAGER'
       # If true all players will have the default particle trail enabled by default.
       display_by_default: true
       # If true particles will not be displayed if the player is vanished.

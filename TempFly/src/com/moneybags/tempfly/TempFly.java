@@ -15,7 +15,6 @@ import org.bukkit.scheduler.BukkitTask;
 
 import com.moneybags.tempfly.aesthetic.ActionBarAPI;
 import com.moneybags.tempfly.aesthetic.ClipAPI;
-import com.moneybags.tempfly.aesthetic.MvdWAPI;
 import com.moneybags.tempfly.aesthetic.TitleAPI;
 import com.moneybags.tempfly.aesthetic.particle.Particles;
 import com.moneybags.tempfly.command.CommandManager;
@@ -49,6 +48,7 @@ public class TempFly extends JavaPlugin {
 	private CommandManager commands;
 	private GuiManager gui;
 	private BukkitTask autosave;
+	private BukkitTask particlesTask;
 	
 	public HookManager getHookManager() {
 		return hooks;
@@ -130,20 +130,17 @@ public class TempFly extends JavaPlugin {
 	
 	private void initializeAesthetics() {
 		Particles.initialize(this);
-		
+		if (particlesTask != null) {
+			particlesTask.cancel();
+			particlesTask = null;
+		}
 		if (V.particles) {
-			new ParticleTask(this).runTaskTimer(this, 0, 5);
+			particlesTask = new ParticleTask(this).runTaskTimer(this, 0, 5);
 		}
-		if (V.actionBar) {
-			ActionBarAPI.initialize(this);
-		}
+		ActionBarAPI.initialize(this);
 		
 		TitleAPI.initialize(this);
 		
-		if (Bukkit.getPluginManager().isPluginEnabled("MVdWPlaceholderAPI")) {
-			Console.info("Initializing MvdwAPI");
-			MvdWAPI.initialize(this);
-		}
 		if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
 			Console.info("Initializing ClipAPI");
 			ClipAPI.initialize(this);
@@ -157,9 +154,12 @@ public class TempFly extends JavaPlugin {
 	
 	@Override
 	public void onDisable() {
-		flight.onDisable();
-		gui.endAllSessions();
-		bridge.commitAll();
+		if (particlesTask != null) particlesTask.cancel();
+		if (autosave != null) autosave.cancel();
+		if (flight != null) flight.onDisable();
+		if (gui != null) gui.endAllSessions();
+		if (bridge != null) bridge.commitAll();
+		tfApi = null;
 	}
 	
 	/*
@@ -173,6 +173,7 @@ public class TempFly extends JavaPlugin {
 		Files.createFiles(this);
 		V.loadValues();
 		initializeGui();
+		initializeAesthetics();
 		
 		flight.onTempflyReload();
 		hooks.onTempflyReload();

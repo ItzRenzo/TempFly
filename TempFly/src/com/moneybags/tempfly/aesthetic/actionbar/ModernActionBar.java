@@ -16,6 +16,6 @@ public class ModernActionBar extends ActionBar {
         	  return;
         }
 
-        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(message));
+        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(message));
     }
 }

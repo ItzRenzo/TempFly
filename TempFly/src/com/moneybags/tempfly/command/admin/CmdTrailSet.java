@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.bukkit.Bukkit;
-import org.bukkit.Effect;
 import org.bukkit.Particle;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -53,18 +52,11 @@ public class CmdTrailSet extends TempFlyCommand {
 			return;
 		}
 		
-		if (Particles.oldParticles()) {
-			try {Effect.valueOf(particle);} catch (Exception e) {
-				U.m(s, V.invalidParticle.replaceAll("\\{PARTICLE}", particle));
-				return;
-			}
-		} else {
-			try {Particle.valueOf(particle);} catch (Exception e) {
-				U.m(s, V.invalidParticle.replaceAll("\\{PARTICLE}", particle));
-				return;
-			}
+		if (Particles.resolve(particle) == null) {
+			U.m(s, V.invalidParticle.replaceAll("\\{PARTICLE}", particle));
+			return;
 		}
-		Particles.setTrail(((Player)target).getUniqueId(), particle.toUpperCase());
+		Particles.setTrail(((Player)target).getUniqueId(), Particles.resolve(particle).name());
 		U.m(target, V.trailSetSelf
 				.replaceAll("\\{PARTICLE}", particle));
 		if (s != target) {
@@ -80,16 +72,14 @@ public class CmdTrailSet extends TempFlyCommand {
 		Console.debug(U.arrayToString(args, " - "));
 		if (args.length <= 2) {
 			if (U.hasPermission(s, "tempfly.trails.set.other")) {
-				return getPlayerArguments(args[1]);
-			} else if (U.hasPermission(s, "tempfly.trails.set.self")) {
+				return getPlayerArguments(args.length > 1 ? args[1] : "");
+			} else if (s instanceof Player && U.hasPermission(s, "tempfly.trails.set.self")) {
 				return Arrays.asList(((Player)s).getName());
 			}
 		} else if (args.length <= 3) {
 			List<String> particles = new ArrayList<>();
-			if (!Particles.oldParticles()) {
-				Arrays.asList(Particle.values()).stream().forEach(particle -> particles.add(particle.toString()));
-			} else {
-				Arrays.asList(Effect.values()).stream().forEach(particle -> particles.add(particle.toString()));
+			for (Particle particle : Particle.values()) {
+				if (Particles.isPlayable(particle)) particles.add(particle.name());
 			}
 			return particles;
 		}
